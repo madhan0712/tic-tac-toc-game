@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            font-family: 'Arial', sans-serif;
+            background-image: url('file:///C:/Users/hp/Documents/madimag.webp'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        h1 {
+            color: #000000;
+            font-size: 2em;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-selection {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 5px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #e65100;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin-top: 20px;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 100px;
+            font-size: 2em;
+            background-color: #ffffff;
+            border: 2px solid #4CAF50;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .cell:hover {
+            background-color: #e1f5fe;
+            transform: scale(1.05);
+        }
+
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 120px;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 20px;
+            box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .sidebar h2 {
+            margin-top: 0;
+            color: #4CAF50;
+            font-size: 1.5em;
+        }
+
+        .sidebar .status {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .sidebar .status.winner {
+            color: #388e3c; 
+            text-shadow: 2px 2px 6px rgba(0, 255, 0, 0.5);
+        }
+
+        .sidebar .status.draw {
+            color: #f44336;
+            text-shadow: 2px 2px 6px rgba(255, 0, 0, 0.5);
+        }
+
+        .history {
+            margin-top: 20px;
+            font-size: 1em;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #fff3e0;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #4CAF50;
+            margin-top: 20px;
+        }
+
+        .history-entry {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+            color: #424242;
+        }
+
+        .history-entry span {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .history-entry.ai {
+            color: #ff5722;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Tic-Tac-Toe Game</h1>
+        <div class="mode-selection">
+            <button onclick="setMode('2Players')">2 Players</button>
+            <button onclick="setMode('vsAI')">Vs AI</button>
+        </div>
+        <div class="game-board">
+            <div class="cell" id="cell0" onclick="handleClick(0)"></div>
+            <div class="cell" id="cell1" onclick="handleClick(1)"></div>
+            <div class="cell" id="cell2" onclick="handleClick(2)"></div>
+            <div class="cell" id="cell3" onclick="handleClick(3)"></div>
+            <div class="cell" id="cell4" onclick="handleClick(4)"></div>
+            <div class="cell" id="cell5" onclick="handleClick(5)"></div>
+            <div class="cell" id="cell6" onclick="handleClick(6)"></div>
+            <div class="cell" id="cell7" onclick="handleClick(7)"></div>
+            <div class="cell" id="cell8" onclick="handleClick(8)"></div>
+        </div>
+        <button onclick="resetGame()">Reset Game</button>
+    </div>
+
+    <div class="sidebar">
+        <h2>Game Status</h2>
+        <div class="status" id="status">Mode: 2 Players</div>
+        <div class="history" id="history"></div>
+    </div>
+
+    <script>
+        
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let gameActive = true;
+        let mode = "2Players"; 
+        const statusDisplay = document.getElementById("status");
+        const historyDisplay = document.getElementById("history");
+
+       
+        function setMode(selectedMode) {
+            mode = selectedMode;
+            resetGame();
+            statusDisplay.textContent = `Mode: ${mode === "vsAI" ? "Vs AI" : "2 Players"}`;
+        }
+
+        function handleClick(index) {
+            if (board[index] !== "") {
+                statusDisplay.textContent = "This cell is already filled! Choose another one.";
+                return;  
+            }
+
+            if (gameActive) {
+                board[index] = currentPlayer;
+                document.getElementById("cell" + index).textContent = currentPlayer;
+                logMove(index);  
+                checkGameState();
+
+                if (gameActive) {
+                    if (mode === "vsAI" && currentPlayer === "X") {
+                        currentPlayer = "O";
+                        statusDisplay.textContent = "AI's Turn";
+                        setTimeout(makeAIMove, 500); 
+                    } else {
+                        currentPlayer = currentPlayer === "X" ? "O" : "X";
+                        statusDisplay.textContent = `Player ${currentPlayer}'s Turn`;
+                    }
+                }
+            }
+        }
+
+       
+        function checkGameState() {
+            const winningConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (let condition of winningConditions) {
+                const [a, b, c] = condition;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    gameActive = false;
+                    statusDisplay.textContent = `${board[a]} wins!`;
+                    statusDisplay.classList.add('winner');
+                    return;
+                }
+            }
+
+         
+            if (!board.includes("")) {
+                gameActive = false;
+                statusDisplay.textContent = "It's a draw!";
+                statusDisplay.classList.add('draw');
+            }
+        }
+
+       
+        function makeAIMove() {
+            let availableCells = board.map((cell, index) => cell === "" ? index : null).filter(index => index !== null);
+            if (availableCells.length > 0) {
+                let randomIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
+                board[randomIndex] = "O";
+                document.getElementById("cell" + randomIndex).textContent = "O";
+                logMove(randomIndex, 'ai');  
+                checkGameState();
+                if (gameActive) currentPlayer = "X"; 
+            }
+        }
+
+       
+        function logMove(index, type = 'player') {
+            let moveDetails = document.createElement("div");
+            let timestamp = new Date().toLocaleTimeString();
+            moveDetails.classList.add("history-entry");
+            moveDetails.classList.add(type);
+            moveDetails.innerHTML = `Move ${index + 1} at ${timestamp}: Player ${currentPlayer} (${type === "ai" ? "AI" : "Player"})`;
+            historyDisplay.appendChild(moveDetails);
+        }
+
+        
+        function resetGame() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            currentPlayer = "X";
+            gameActive = true;
+            statusDisplay.classList.remove('winner', 'draw');
+            statusDisplay.textContent = `Mode: ${mode === "vsAI" ? "Vs AI" : "2 Players"}`;
+            document.querySelectorAll(".cell").forEach(cell => (cell.textContent = ""));
+            historyDisplay.innerHTML = "";
+        }
+    </script>
+</body>
+</html>
